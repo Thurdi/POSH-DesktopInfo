@@ -17,6 +17,7 @@ $form.TransparencyKey = [System.Drawing.Color]::Black
 $form.AllowTransparency = $true
 $form.Width = 400
 $form.ShowInTaskbar = $false
+$i = 10
 
 #Systray Icon
 $notifyIcon = New-Object Windows.Forms.NotifyIcon
@@ -46,28 +47,42 @@ $form.DesktopLocation = $point
 
 # Create the hostName label control and set text, size and location
 $hostName = New-Object Windows.Forms.Label
-$hostName.Location = New-Object System.Drawing.Point(10,10)
+$hostName.Location = New-Object System.Drawing.Point(10,$i)
 $hostName.Size = New-Object System.Drawing.Size(100,25)
 $hostName.Width = 300
 $hostName.Font = New-Object System.Drawing.Font($hostName.font.Name,16,[System.Drawing.FontStyle]::Bold)
 $hostName.ForeColor = [System.Drawing.Color]::White
 $hostName.text = "Host Name: $($env:COMPUTERNAME)"
+$i+=30
 
 # Create the userName label control and set text, size and location
 $userName = New-Object Windows.Forms.Label
-$userName.Location = New-Object System.Drawing.Point(10,40)
+$userName.Location = New-Object System.Drawing.Point(10,$i)
 $userName.Size = New-Object System.Drawing.Size(100,25)
 $userName.Width = 300
 $userName.Font = New-Object System.Drawing.Font($hostName.font.Name,16,[System.Drawing.FontStyle]::Bold)
 $userName.ForeColor = [System.Drawing.Color]::White
 $userName.text = "Username: $($env:USERNAME)"
+$i+=30
+
+# Create the userName label control and set text, size and location
+$OSVersionLabel = New-Object Windows.Forms.Label
+$OSVersionLabel.Location = New-Object System.Drawing.Point(10,$i)
+$OSVersionLabel.Size = New-Object System.Drawing.Size(100,25)
+$OSVersionLabel.Width = 300
+$OSVersionLabel.Font = New-Object System.Drawing.Font($hostName.font.Name,16,[System.Drawing.FontStyle]::Bold)
+$OSVersionLabel.ForeColor = [System.Drawing.Color]::White
+$OSVersion = [System.Environment]::OSVersion.Version.ToString()
+$OSVersionLabel.text = "OSVersion: $($OSVersion)"
+$i+=30
 
 
 $NetAdapters = Get-NetAdapter
 $IPLabel = @()
-$i = 70
 
 foreach($na in $NetAdapters){
+#    if($na.ifDesc -like "*VMWare*" -or $na.ifDesc -like "*Bluetooth*" -or $na.ifDesc -like "*VPN*" -or $na.ifDesc -like "*Hyper-V*" -or $na.ifDesc -like "*VirtualBox*" -or $na.Status -eq "Disconnected"){}
+#    else{
         $IP = New-Object Windows.Forms.Label
         $IP.Location = New-Object System.Drawing.Point(10,$i)
         $IP.Size = New-Object System.Drawing.Size(100,25)
@@ -82,7 +97,8 @@ foreach($na in $NetAdapters){
         $IP.text = "$($AdapterAlias): $((Get-NetIPAddress -InterfaceIndex $na.ifIndex).IPv4Address)"
         $IPLabel+=$IP
         $i+=30
-}
+    }
+#}
 
 #refresh form every 2 seconds
 $Timer = New-Object System.Windows.Forms.Timer
@@ -90,7 +106,8 @@ $Timer.Interval = 2000
 $Timer.Add_Tick({
     $hostName.text = "Host Name: $($env:COMPUTERNAME)"
     $userName.text = "Username: $($env:USERNAME)"
-    
+    $OSVersion = [System.Environment]::OSVersion.Version.ToString()
+    $OSVersionLabel.text = "OSVersion: $($OSVersion)"
     #cycle through known interfaces by index
     foreach($l in $IPLabel){
         $na = Get-NetAdapter -InterfaceIndex $l.ifIndex
@@ -108,6 +125,7 @@ $Timer.Enabled = $true
 # Add the controls to the Form
 $form.controls.add($hostName)
 $form.controls.add($userName)
+$form.controls.add($OSVersionLabel)
 foreach($l in $IPLabel){
     $form.controls.add($l)
 }
